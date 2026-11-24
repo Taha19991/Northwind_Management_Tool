@@ -46,7 +46,7 @@ public sealed class QueryConsoleRepository(IReadOnlyDbConnectionFactory readOnly
 
         try
         {
-            await using var conn = await _readOnlyConnectionFactory.OpenAsync(ct);
+            await using var conn = await OpenConsoleConnectionAsync(ct);
 
             var objectRows = (await conn.QueryAsync<SchemaObjectRow>(
                 new CommandDefinition(objectsSql, cancellationToken: ct))).ToList();
@@ -112,7 +112,7 @@ public sealed class QueryConsoleRepository(IReadOnlyDbConnectionFactory readOnly
 
         var stopwatch = Stopwatch.StartNew();
 
-        await using var conn = await _readOnlyConnectionFactory.OpenAsync(ct);
+        await using var conn = await OpenConsoleConnectionAsync(ct);
         var transactionStarted = false;
 
         try
@@ -211,6 +211,31 @@ public sealed class QueryConsoleRepository(IReadOnlyDbConnectionFactory readOnly
                     // Connection is about to be closed/discarded; ignore rollback cleanup failures.
                 }
             }
+        }
+    }
+
+    private const string ConnectionHint =
+        "Check ConnectionStrings:NorthwindReadOnly in appsettings.Development.json and that the nw_readonly role exists (docs/db/06_console_role.sql).";
+
+    private async Task<System.Data.Common.DbConnection> OpenConsoleConnectionAsync(CancellationToken ct)
+    {
+        try
+        {
+            return await _readOnlyConnectionFactory.OpenAsync(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (PostgresException ex)
+        {
+            throw new QueryConsoleException(ex.MessageText, ex.SqlState, null, ex, ConnectionHint);
+        }
+        catch (Exception ex)
+        {
+            // Non-PostgreSQL failures (socket, timeout, missing connection string, ...): show the real text.
+            var inner = ex.InnerException is null ? string.Empty : $" ({ex.InnerException.Message})";
+            throw new QueryConsoleException($"{ex.Message}{inner}", null, null, ex, ConnectionHint);
         }
     }
 
