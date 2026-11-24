@@ -1,0 +1,90 @@
+<Window x:Class="Northwind.App.Views.Dialogs.ShipOrderDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="clr-namespace:Northwind.App"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Ship Order"
+        Width="460"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource AppBackgroundBrush}"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+    <Grid Margin="20">
+        <materialDesign:Card Padding="22" UniformCornerRadius="10">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Margin="0,0,0,12">
+                    <Run Text="Order #" />
+                    <Run Text="{Binding OrderId}" />
+                    <Run Text=" — Ship Order" />
+                </TextBlock>
+
+                <Border Background="#F8FAFC"
+                        BorderBrush="#E2E8F0"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="12,8"
+                        Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.4*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Customer" FontSize="11" Foreground="{StaticResource MutedTextBrush}" />
+                            <TextBlock Text="{Binding CustomerName}" FontSize="13" FontWeight="Medium" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Order Date" FontSize="11" Foreground="{StaticResource MutedTextBrush}" />
+                            <TextBlock Text="{Binding OrderDate, StringFormat={x:Static app:AppFormats.IsoDateBinding}}" FontSize="13" FontWeight="Medium" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <ProgressBar IsIndeterminate="True"
+                             Height="3"
+                             Margin="0,0,0,10"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                <Border Style="{StaticResource ErrorBannerStyle}"
+                        Margin="0,0,0,12"
+                        Visibility="{Binding ErrorMessage, Converter={StaticResource NullToVisibilityConverter}}">
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="{StaticResource ErrorBannerTextBrush}"
+                               TextWrapping="Wrap"
+                               FontSize="12.5" />
+                </Border>
+
+                <ComboBox ItemsSource="{Binding Shippers}"
+                          SelectedValue="{Binding ShipVia, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                          SelectedValuePath="ShipperId"
+                          DisplayMemberPath="CompanyName"
+                          materialDesign:HintAssist.Hint="Shipper *"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          Margin="0,0,0,18" />
+
+                <TextBox Text="{Binding FreightText, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                         materialDesign:HintAssist.Hint="Freight ($)"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Margin="0,0,0,18" />
+
+                <DatePicker SelectedDate="{Binding ShippedDate, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                            materialDesign:HintAssist.Hint="Shipped Date *"
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                            Margin="0,0,0,22" />
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancel"
+                            Command="{Binding CancelCommand}"
+                            IsCancel="True"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Margin="0,0,10,0" />
+                    <Button Content="Ship Order"
+                            Command="{Binding ConfirmCommand}"
+                            IsDefault="True" />
+                </StackPanel>
+            </StackPanel>
+        </materialDesign:Card>
+    </Grid>
+</Window>

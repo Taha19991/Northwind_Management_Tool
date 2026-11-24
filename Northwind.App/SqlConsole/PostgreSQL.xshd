@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SyntaxDefinition name="PostgreSQL" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Comment" foreground="#6A737D" fontStyle="italic" />
+  <Color name="String" foreground="#0B8043" />
+  <Color name="QuotedIdentifier" foreground="#7C3AED" />
+  <Color name="Number" foreground="#C2410C" />
+  <Color name="Keyword" foreground="#1565C0" fontWeight="bold" />
+  <Color name="Function" foreground="#7B1FA2" fontWeight="bold" />
+  <Color name="Operator" foreground="#475569" />
+
+  <RuleSet ignoreCase="true">
+    <Span color="Comment" begin="--" />
+    <Span color="Comment" multiline="true" begin="/\*" end="\*/" />
+
+    <Span color="String" multiline="true">
+      <Begin>'</Begin>
+      <End>'</End>
+      <RuleSet>
+        <Span begin="''" end="" />
+      </RuleSet>
+    </Span>
+
+    <Span color="QuotedIdentifier">
+      <Begin>"</Begin>
+      <End>"</End>
+      <RuleSet>
+        <Span begin="&quot;&quot;" end="" />
+      </RuleSet>
+    </Span>
+
+    <Keywords color="Keyword">
+      <Word>SELECT</Word>
+      <Word>FROM</Word>
+      <Word>WHERE</Word>
+      <Word>JOIN</Word>
+      <Word>LEFT</Word>
+      <Word>RIGHT</Word>
+      <Word>INNER</Word>
+      <Word>OUTER</Word>
+      <Word>FULL</Word>
+      <Word>CROSS</Word>
+      <Word>NATURAL</Word>
+      <Word>ON</Word>
+      <Word>USING</Word>
+      <Word>GROUP</Word>
+      <Word>ORDER</Word>
+      <Word>BY</Word>
+      <Word>HAVING</Word>
+      <Word>LIMIT</Word>
+      <Word>OFFSET</Word>
+      <Word>FETCH</Word>
+      <Word>FIRST</Word>
+      <Word>NEXT</Word>
+      <Word>ROWS</Word>
+      <Word>ONLY</Word>
+      <Word>DISTINCT</Word>
+      <Word>ALL</Word>
+      <Word>AS</Word>
+      <Word>AND</Word>
+      <Word>OR</Word>
+      <Word>NOT</Word>
+      <Word>IN</Word>
+      <Word>IS</Word>
+      <Word>NULL</Word>
+      <Word>TRUE</Word>
+      <Word>FALSE</Word>
+      <Word>BETWEEN</Word>
+      <Word>LIKE</Word>
+      <Word>ILIKE</Word>
+      <Word>SIMILAR</Word>
+      <Word>TO</Word>
+      <Word>CASE</Word>
+      <Word>WHEN</Word>
+      <Word>THEN</Word>
+      <Word>ELSE</Word>
+      <Word>END</Word>
+      <Word>FILTER</Word>
+      <Word>WITH</Word>
+      <Word>RECURSIVE</Word>
+      <Word>UNION</Word>
+      <Word>INTERSECT</Word>
+      <Word>EXCEPT</Word>
+      <Word>EXISTS</Word>
+      <Word>ANY</Word>
+      <Word>SOME</Word>
+      <Word>ASC</Word>
+      <Word>DESC</Word>
+      <Word>NULLS</Word>
+      <Word>LAST</Word>
+      <Word>CAST</Word>
+      <Word>INTERVAL</Word>
+      <Word>DATE</Word>
+      <Word>TIMESTAMP</Word>
+      <Word>NUMERIC</Word>
+      <Word>INTEGER</Word>
+      <Word>TEXT</Word>
+      <Word>BOOLEAN</Word>
+      <Word>OVER</Word>
+      <Word>PARTITION</Word>
+      <Word>WINDOW</Word>
+      <Word>INSERT</Word>
+      <Word>INTO</Word>
+      <Word>VALUES</Word>
+      <Word>UPDATE</Word>
+      <Word>SET</Word>
+      <Word>DELETE</Word>
+      <Word>CREATE</Word>
+      <Word>ALTER</Word>
+      <Word>DROP</Word>
+      <Word>TABLE</Word>
+      <Word>VIEW</Word>
+      <Word>EXPLAIN</Word>
+      <Word>ANALYZE</Word>
+      <Word>BEGIN</Word>
+      <Word>COMMIT</Word>
+      <Word>ROLLBACK</Word>
+    </Keywords>
+
+    <Keywords color="Function">
+      <Word>COUNT</Word>
+      <Word>SUM</Word>
+      <Word>AVG</Word>
+      <Word>MIN</Word>
+      <Word>MAX</Word>
+      <Word>ROUND</Word>
+      <Word>CEIL</Word>
+      <Word>FLOOR</Word>
+      <Word>ABS</Word>
+      <Word>COALESCE</Word>
+      <Word>NULLIF</Word>
+      <Word>GREATEST</Word>
+      <Word>LEAST</Word>
+      <Word>EXTRACT</Word>
+      <Word>DATE_TRUNC</Word>
+      <Word>DATE_PART</Word>
+      <Word>NOW</Word>
+      <Word>CURRENT_DATE</Word>
+      <Word>CURRENT_TIMESTAMP</Word>
+      <Word>AGE</Word>
+      <Word>LOWER</Word>
+      <Word>UPPER</Word>
+      <Word>TRIM</Word>
+      <Word>LENGTH</Word>
+      <Word>SUBSTRING</Word>
+      <Word>CONCAT</Word>
+      <Word>STRING_AGG</Word>
+      <Word>TO_CHAR</Word>
+      <Word>ROW_NUMBER</Word>
+      <Word>RANK</Word>
+      <Word>DENSE_RANK</Word>
+      <Word>LAG</Word>
+      <Word>LEAD</Word>
+    </Keywords>
+
+    <Rule color="Number">
+      \b\d+(\.\d+)?\b
+    </Rule>
+
+    <Rule color="Operator">
+      [=,&lt;&gt;+\-*/%|!~]+
+    </Rule>
+  </RuleSet>
+</SyntaxDefinition>

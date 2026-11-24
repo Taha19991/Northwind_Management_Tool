@@ -1,0 +1,303 @@
+<UserControl x:Class="Northwind.App.Views.CustomersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:app="clr-namespace:Northwind.App">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
+                <TextBlock Text="Customers" Style="{StaticResource PageTitleStyle}" Margin="0" VerticalAlignment="Center" />
+                <Border Background="#E3F2FD" CornerRadius="10" Padding="10,3" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Foreground="#1565C0" FontSize="12.5" FontWeight="SemiBold">
+                        <Run Text="{Binding Customers.Count, Mode=OneWay}" />
+                        <Run Text=" customers" />
+                    </TextBlock>
+                </Border>
+            </StackPanel>
+
+            <Button Command="{Binding RefreshCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    Height="36">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Refresh" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBlock Text="Refresh" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </DockPanel>
+
+        <!-- Loading -->
+        <ProgressBar Grid.Row="1"
+                     IsIndeterminate="True"
+                     Height="4"
+                     Margin="0,0,0,8"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+        <!-- Error -->
+        <Border Grid.Row="2"
+                Style="{StaticResource ErrorBannerStyle}"
+                Visibility="{Binding ErrorMessage, Converter={StaticResource NullToVisibilityConverter}}">
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{StaticResource ErrorBannerTextBrush}"
+                       TextWrapping="Wrap" />
+        </Border>
+
+        <!-- Success -->
+        <Border Grid.Row="3"
+                Background="#E8F5E9"
+                BorderBrush="#A5D6A7"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="12,8"
+                Margin="0,0,0,8"
+                Visibility="{Binding StatusMessage, Converter={StaticResource NullToVisibilityConverter}}">
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#1B5E20" />
+        </Border>
+
+        <!-- Main Content: Left List + Right Details -->
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.15*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="1.15*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Search + Customer List -->
+            <materialDesign:Card Grid.Column="0" Padding="14" UniformCornerRadius="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBox Grid.Row="0"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="Search by ID, company, contact, city, or country..."
+                             materialDesign:TextFieldAssist.HasClearButton="True"
+                             materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Margin="0,0,0,12" />
+
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding Customers}"
+                              SelectedItem="{Binding ActiveCustomer, Mode=TwoWay}"
+                              Style="{StaticResource ReadOnlyDataGridStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding CustomerId}" Width="72" />
+                            <DataGridTextColumn Header="Company" Binding="{Binding CompanyName}" Width="1.4*" />
+                            <DataGridTextColumn Header="Contact" Binding="{Binding ContactName}" Width="*" />
+                            <DataGridTextColumn Header="City" Binding="{Binding City}" Width="0.8*" />
+                            <DataGridTextColumn Header="Country" Binding="{Binding Country}" Width="0.8*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </materialDesign:Card>
+
+            <!-- Right: Details and Order History Tabs -->
+            <materialDesign:Card Grid.Column="2" Padding="14" UniformCornerRadius="10">
+                <TabControl Style="{StaticResource MaterialDesignFilledTabControl}">
+                    <!-- Tab 1: Details -->
+                    <TabItem Header="Details">
+                        <Grid Margin="0,12,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                                <Grid Margin="4,4,8,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBox Grid.Row="0" Grid.Column="0"
+                                             Text="{Binding CustomerId, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                             IsReadOnly="{Binding IsCustomerIdReadOnly}"
+                                             CharacterCasing="Upper"
+                                             MaxLength="5"
+                                             materialDesign:HintAssist.Hint="Customer ID (5 letters) *"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Margin="0,0,0,18" />
+
+                                    <TextBox Grid.Row="0" Grid.Column="2"
+                                             Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                             IsReadOnly="{Binding IsReadOnly}"
+                                             MaxLength="40"
+                                             materialDesign:HintAssist.Hint="Company Name *"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Margin="0,0,0,18" />
+
+                                    <TextBox Grid.Row="1" Grid.Column="0"
+                                             Text="{Binding ContactName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                             IsReadOnly="{Binding IsReadOnly}"
+                                             MaxLength="30"
+                                             materialDesign:HintAssist.Hint="Contact Name"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Margin="0,0,0,18" />
+
+                                    <TextBox Grid.Row="1" Grid.Column="2"
+                                             Text="{Binding ContactTitle, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                             IsReadOnly="{Binding IsReadOnly}"
+                                             MaxLength="30"
+                                             materialDesign:HintAssist.Hint="Contact Title"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Margin="0,0,0,18" />
+
+                                    <TextBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                                             Text="{Binding Address, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                             IsReadOnly="{Binding IsReadOnly}"
+                                             MaxLength="60"
+                                             materialDesign:HintAssist.Hint="Address"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Margin="0,0,0,18" />
+
+                                    <TextBox Grid.Row="3" Grid.Column="0"
+                                             Text="{Binding City, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                             IsReadOnly="{Binding IsReadOnly}"
+                                             MaxLength="15"
+                                             materialDesign:HintAssist.Hint="City"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Margin="0,0,0,18" />
+
+                                    <TextBox Grid.Row="3" Grid.Column="2"
+                                             Text="{Binding Region, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                             IsReadOnly="{Binding IsReadOnly}"
+                                             MaxLength="15"
+                                             materialDesign:HintAssist.Hint="Region"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Margin="0,0,0,18" />
+
+                                    <TextBox Grid.Row="4" Grid.Column="0"
+                                             Text="{Binding PostalCode, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                             IsReadOnly="{Binding IsReadOnly}"
+                                             MaxLength="10"
+                                             materialDesign:HintAssist.Hint="Postal Code"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Margin="0,0,0,18" />
+
+                                    <TextBox Grid.Row="4" Grid.Column="2"
+                                             Text="{Binding Country, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                             IsReadOnly="{Binding IsReadOnly}"
+                                             MaxLength="15"
+                                             materialDesign:HintAssist.Hint="Country"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Margin="0,0,0,18" />
+
+                                    <TextBox Grid.Row="5" Grid.Column="0"
+                                             Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                             IsReadOnly="{Binding IsReadOnly}"
+                                             MaxLength="24"
+                                             materialDesign:HintAssist.Hint="Phone"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Margin="0,0,0,8" />
+
+                                    <TextBox Grid.Row="5" Grid.Column="2"
+                                             Text="{Binding Fax, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                             IsReadOnly="{Binding IsReadOnly}"
+                                             MaxLength="24"
+                                             materialDesign:HintAssist.Hint="Fax"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Margin="0,0,0,8" />
+                                </Grid>
+                            </ScrollViewer>
+
+                            <!-- Action Buttons (visible only when CanEdit = true; no Delete) -->
+                            <StackPanel Grid.Row="1"
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Right"
+                                        Margin="0,12,0,0"
+                                        Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <Button Content="New"
+                                        Command="{Binding NewCustomerCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Margin="0,0,8,0" />
+                                <Button Content="Cancel"
+                                        Command="{Binding CancelCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Margin="0,0,8,0" />
+                                <Button Content="Save"
+                                        Command="{Binding SaveCommand}" />
+                            </StackPanel>
+                        </Grid>
+                    </TabItem>
+
+                    <!-- Tab 2: Order History -->
+                    <TabItem Header="Order History">
+                        <Grid Margin="0,12,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <ProgressBar Grid.Row="0"
+                                         IsIndeterminate="True"
+                                         Height="3"
+                                         Margin="0,0,0,8"
+                                         Visibility="{Binding IsLoadingHistory, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                            <DataGrid Grid.Row="1"
+                                      ItemsSource="{Binding OrderHistory}"
+                                      Style="{StaticResource ReadOnlyDataGridStyle}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Order ID" Binding="{Binding OrderId}" Width="84" />
+                                    <DataGridTextColumn Header="Order Date" Binding="{Binding OrderDate, StringFormat={x:Static app:AppFormats.IsoDateBinding}}" Width="*" />
+                                    <DataGridTextColumn Header="Shipped Date" Binding="{Binding ShippedDate, StringFormat={x:Static app:AppFormats.IsoDateBinding}, TargetNullValue=-}" Width="*" />
+                                    <DataGridTextColumn Header="Shipper" Binding="{Binding ShipperName}" Width="1.2*" />
+                                    <DataGridTextColumn Header="Net Total ($)" Binding="{Binding NetTotal, StringFormat={}{0:N2}}" Width="*">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Right" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <Border Grid.Row="2"
+                                    Background="#F8FAFC"
+                                    BorderBrush="#E2E8F0"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="14,10"
+                                    Margin="0,10,0,0">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}">
+                                        <Run Text="Total: " />
+                                        <Run Text="{Binding OrderHistory.Count, Mode=OneWay}" FontWeight="SemiBold" Foreground="#0F172A" />
+                                        <Run Text=" orders" />
+                                    </TextBlock>
+                                    <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="15" FontWeight="Bold" Foreground="#1565C0">
+                                        <Run Text="Total Revenue ($): " Foreground="#334155" FontWeight="SemiBold" />
+                                        <Run Text="{Binding TotalOrderRevenue, StringFormat={}{0:N2}}" />
+                                    </TextBlock>
+                                </DockPanel>
+                            </Border>
+                        </Grid>
+                    </TabItem>
+                </TabControl>
+            </materialDesign:Card>
+        </Grid>
+    </Grid>
+</UserControl>

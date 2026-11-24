@@ -1,0 +1,395 @@
+<UserControl x:Class="Northwind.App.Views.TicketsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Northwind.App"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
+                <TextBlock Text="Support Tickets" Style="{StaticResource PageTitleStyle}" Margin="0" VerticalAlignment="Center" />
+                <Border Background="#E3F2FD" CornerRadius="10" Padding="10,3" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Foreground="#1565C0" FontSize="12.5" FontWeight="SemiBold">
+                        <Run Text="{Binding Tickets.Count, Mode=OneWay}" />
+                        <Run Text=" tickets" />
+                    </TextBlock>
+                </Border>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                <Button Command="{Binding OpenNewTicketCommand}"
+                        Margin="0,0,10,0"
+                        Height="36"
+                        Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBlock Text="New Ticket" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding RefreshCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Height="36">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Refresh" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBlock Text="Refresh" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Status Filter Chips -->
+        <materialDesign:Card Grid.Row="1" Padding="12,10" UniformCornerRadius="10" Margin="0,0,0,10">
+            <ItemsControl ItemsSource="{Binding FilterChips}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Content="{Binding DisplayText}"
+                                Command="{Binding DataContext.SelectFilterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
+                                Height="34"
+                                Padding="14,0"
+                                Margin="0,0,8,0">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                            <Setter Property="Background" Value="#1565C0" />
+                                            <Setter Property="Foreground" Value="White" />
+                                            <Setter Property="BorderBrush" Value="#1565C0" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </materialDesign:Card>
+
+        <!-- Loading -->
+        <ProgressBar Grid.Row="2"
+                     IsIndeterminate="True"
+                     Height="4"
+                     Margin="0,0,0,8"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+        <!-- Error -->
+        <Border Grid.Row="3"
+                Style="{StaticResource ErrorBannerStyle}"
+                Visibility="{Binding ErrorMessage, Converter={StaticResource NullToVisibilityConverter}}">
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{StaticResource ErrorBannerTextBrush}"
+                       TextWrapping="Wrap" />
+        </Border>
+
+        <!-- Status Message -->
+        <Border Grid.Row="4"
+                Background="#E8F5E9"
+                BorderBrush="#A5D6A7"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="12,8"
+                Margin="0,0,0,8"
+                Visibility="{Binding StatusMessage, Converter={StaticResource NullToVisibilityConverter}}">
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#1B5E20" />
+        </Border>
+
+        <!-- Main Content: Left Ticket Table + Right Detail Panel -->
+        <Grid Grid.Row="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.45*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="1.05*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Tickets Grid -->
+            <materialDesign:Card Grid.Column="0" Padding="12" UniformCornerRadius="10">
+                <DataGrid ItemsSource="{Binding Tickets}"
+                          SelectedItem="{Binding ActiveTicket, Mode=TwoWay}"
+                          Style="{StaticResource ReadOnlyDataGridStyle}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID" Binding="{Binding TicketId}" Width="54" />
+                        <DataGridTextColumn Header="Created" Binding="{Binding CreatedAt, StringFormat={x:Static app:AppFormats.IsoDateBinding}}" Width="92" />
+                        <DataGridTextColumn Header="Customer" Binding="{Binding CompanyName}" Width="1.3*" />
+                        <DataGridTextColumn Header="Order" Binding="{Binding OrderId, TargetNullValue=-}" Width="68" />
+                        <DataGridTextColumn Header="Category" Binding="{Binding CategoryText}" Width="1.05*" />
+                        <DataGridTemplateColumn Header="Priority" Width="84" SortMemberPath="Priority">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Priority, Converter={StaticResource StatusToBrushConverter}}"
+                                            CornerRadius="10"
+                                            Padding="8,2"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding PriorityText}"
+                                                   Foreground="White"
+                                                   FontSize="11.5"
+                                                   FontWeight="SemiBold" />
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Status" Width="102" SortMemberPath="Status">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Status, Converter={StaticResource StatusToBrushConverter}}"
+                                            CornerRadius="10"
+                                            Padding="8,2"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding StatusText}"
+                                                   Foreground="White"
+                                                   FontSize="11.5"
+                                                   FontWeight="SemiBold" />
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Assigned To" Binding="{Binding AssignedTo, TargetNullValue=(Unassigned)}" Width="1.05*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </materialDesign:Card>
+
+            <!-- Right: Ticket Detail Panel -->
+            <materialDesign:Card Grid.Column="2" Padding="18" UniformCornerRadius="10">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,10">
+                            <TextBlock Style="{StaticResource SectionHeaderStyle}" Margin="0" VerticalAlignment="Center" DockPanel.Dock="Left">
+                                <Run Text="Ticket #" />
+                                <Run Text="{Binding TicketDetail.TicketId, TargetNullValue=-}" />
+                            </TextBlock>
+
+                            <StackPanel Orientation="Horizontal"
+                                        DockPanel.Dock="Right"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding HasDetail, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <Border Background="{Binding TicketDetail.Priority, Converter={StaticResource StatusToBrushConverter}}"
+                                        CornerRadius="10"
+                                        Padding="9,3"
+                                        Margin="0,0,6,0">
+                                    <TextBlock Text="{Binding TicketDetail.PriorityText}"
+                                               Foreground="White"
+                                               FontSize="11.5"
+                                               FontWeight="SemiBold" />
+                                </Border>
+                                <Border Background="{Binding TicketDetail.Status, Converter={StaticResource StatusToBrushConverter}}"
+                                        CornerRadius="10"
+                                        Padding="9,3">
+                                    <TextBlock Text="{Binding TicketDetail.StatusText}"
+                                               Foreground="White"
+                                               FontSize="11.5"
+                                               FontWeight="SemiBold" />
+                                </Border>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <ProgressBar IsIndeterminate="True"
+                                     Height="3"
+                                     Margin="0,0,0,8"
+                                     Visibility="{Binding IsLoadingDetail, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                        <StackPanel Visibility="{Binding HasDetail, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <!-- Subject & Description -->
+                            <TextBlock Text="{Binding TicketDetail.Subject}"
+                                       FontSize="15.5"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,8" />
+
+                            <Border Background="#F8FAFC"
+                                    BorderBrush="#E2E8F0"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10,8"
+                                    Margin="0,0,0,14">
+                                <TextBlock Text="{Binding TicketDetail.Description, TargetNullValue='No description provided.'}"
+                                           FontSize="13"
+                                           TextWrapping="Wrap"
+                                           Foreground="#334155" />
+                            </Border>
+
+                            <!-- Metadata Grid -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="10" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="10" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Row="0" Grid.Column="0">
+                                    <TextBlock Text="Customer" FontSize="11.5" Foreground="{StaticResource MutedTextBrush}" />
+                                    <TextBlock FontSize="13" FontWeight="Medium" TextWrapping="Wrap">
+                                        <Run Text="{Binding TicketDetail.CompanyName}" />
+                                        <Run Text=" (" Foreground="{StaticResource MutedTextBrush}" />
+                                        <Run Text="{Binding TicketDetail.CustomerId}" Foreground="{StaticResource MutedTextBrush}" />
+                                        <Run Text=")" Foreground="{StaticResource MutedTextBrush}" />
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="0" Grid.Column="1">
+                                    <TextBlock Text="Linked Order" FontSize="11.5" Foreground="{StaticResource MutedTextBrush}" />
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding OrderDisplay}" FontSize="13" FontWeight="Medium" VerticalAlignment="Center" />
+                                        <Button Command="{Binding OpenLinkedOrderCommand}"
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                Height="24"
+                                                Padding="6,0"
+                                                Margin="6,0,0,0"
+                                                FontSize="12"
+                                                Visibility="{Binding HasOrderLink, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Open Order" VerticalAlignment="Center" Margin="0,0,3,0" />
+                                                <materialDesign:PackIcon Kind="OpenInNew" Width="13" Height="13" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="2" Grid.Column="0">
+                                    <TextBlock Text="Category" FontSize="11.5" Foreground="{StaticResource MutedTextBrush}" />
+                                    <TextBlock Text="{Binding TicketDetail.CategoryText}" FontSize="13" FontWeight="Medium" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="2" Grid.Column="1">
+                                    <TextBlock Text="Created" FontSize="11.5" Foreground="{StaticResource MutedTextBrush}" />
+                                    <TextBlock Text="{Binding TicketDetail.CreatedAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}" FontSize="13" FontWeight="Medium" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="4" Grid.Column="0">
+                                    <TextBlock Text="Resolved" FontSize="11.5" Foreground="{StaticResource MutedTextBrush}" />
+                                    <TextBlock Text="{Binding TicketDetail.ResolvedAt, StringFormat={}{0:yyyy-MM-dd HH:mm}, TargetNullValue=-}" FontSize="13" FontWeight="Medium" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="4" Grid.Column="1"
+                                            Visibility="{Binding HasResolutionTime, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <TextBlock Text="Resolution Time" FontSize="11.5" Foreground="{StaticResource MutedTextBrush}" />
+                                    <TextBlock Text="{Binding ResolutionTimeDisplay}" FontSize="13" FontWeight="SemiBold" Foreground="#2E7D32" />
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Linked Returns (if any) -->
+                            <StackPanel Margin="0,0,0,14"
+                                        Visibility="{Binding HasRelatedReturns, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="Linked Returns" FontSize="12.5" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6" />
+                                <DataGrid ItemsSource="{Binding RelatedReturns}"
+                                          Style="{StaticResource ReadOnlyDataGridStyle}"
+                                          MaxHeight="145">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Return #" Binding="{Binding ReturnId}" Width="72" />
+                                        <DataGridTextColumn Header="Product" Binding="{Binding ProductName}" Width="*" />
+                                        <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="46" />
+                                        <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="82" />
+                                        <DataGridTextColumn Header="Refund ($)" Binding="{Binding RefundAmount, StringFormat={}{0:N2}}" Width="82" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+
+                            <Separator Margin="0,2,0,14" />
+
+                            <!-- Assignment + Workflow Actions -->
+                            <StackPanel Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="Assignment" FontSize="12.5" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,8" />
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <ComboBox Grid.Column="0"
+                                              ItemsSource="{Binding Assignees}"
+                                              SelectedItem="{Binding SelectedDetailAssignee, Mode=TwoWay}"
+                                              DisplayMemberPath="DisplayName"
+                                              materialDesign:HintAssist.Hint="Assigned Employee"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+
+                                    <Button Grid.Column="2"
+                                            Content="Assign"
+                                            Command="{Binding SaveAssignmentCommand}"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Height="44"
+                                            VerticalAlignment="Center" />
+                                </Grid>
+
+                                <TextBlock Text="Status Actions" FontSize="12.5" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,8" />
+                                <WrapPanel Orientation="Horizontal">
+                                    <Button Command="{Binding StartProgressCommand}"
+                                            Margin="0,0,8,8"
+                                            Height="36"
+                                            Visibility="{Binding CanStartProgress, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="PlayOutline" VerticalAlignment="Center" Margin="0,0,5,0" />
+                                            <TextBlock Text="Start Progress" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Button Command="{Binding ResolveTicketCommand}"
+                                            Margin="0,0,8,8"
+                                            Height="36"
+                                            Background="#2E7D32"
+                                            BorderBrush="#2E7D32"
+                                            Visibility="{Binding CanResolve, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CheckCircleOutline" VerticalAlignment="Center" Margin="0,0,5,0" />
+                                            <TextBlock Text="Mark Resolved" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Button Command="{Binding ReopenTicketCommand}"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Margin="0,0,8,8"
+                                            Height="36"
+                                            Visibility="{Binding CanReopen, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Restore" VerticalAlignment="Center" Margin="0,0,5,0" />
+                                            <TextBlock Text="Reopen" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Button Command="{Binding CloseTicketCommand}"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Margin="0,0,8,8"
+                                            Height="36"
+                                            Visibility="{Binding CanClose, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="LockOutline" VerticalAlignment="Center" Margin="0,0,5,0" />
+                                            <TextBlock Text="Close Ticket" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </WrapPanel>
+
+                                <TextBlock Text="This ticket is closed. No further status changes are allowed."
+                                           FontSize="12.5"
+                                           FontStyle="Italic"
+                                           Foreground="{StaticResource MutedTextBrush}"
+                                           Visibility="{Binding IsClosedTicket, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </materialDesign:Card>
+        </Grid>
+    </Grid>
+</UserControl>

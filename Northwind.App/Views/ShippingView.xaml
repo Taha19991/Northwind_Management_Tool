@@ -1,0 +1,214 @@
+<UserControl x:Class="Northwind.App.Views.ShippingView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Northwind.App"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
+                <TextBlock Text="Shipping" Style="{StaticResource PageTitleStyle}" Margin="0" VerticalAlignment="Center" />
+                <Border Background="#FFF3E0" CornerRadius="10" Padding="10,3" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Foreground="#E65100" FontSize="12.5" FontWeight="SemiBold">
+                        <Run Text="{Binding PendingOrders.Count, Mode=OneWay}" />
+                        <Run Text=" unshipped" />
+                    </TextBlock>
+                </Border>
+                <Border Background="#FFEBEE" CornerRadius="10" Padding="10,3" Margin="8,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Foreground="#C62828" FontSize="12.5" FontWeight="SemiBold">
+                        <Run Text="{Binding LateOrders.Count, Mode=OneWay}" />
+                        <Run Text=" late" />
+                    </TextBlock>
+                </Border>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <TextBlock VerticalAlignment="Center"
+                           Margin="0,0,14,0"
+                           FontSize="12.5"
+                           Foreground="{StaticResource MutedTextBrush}">
+                    <Run Text="Reference date: " />
+                    <Run Text="{Binding ReferenceDate, StringFormat={x:Static app:AppFormats.IsoDateBinding}}" FontWeight="SemiBold" Foreground="#334155" />
+                </TextBlock>
+
+                <Button Command="{Binding RefreshCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Height="36">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Refresh" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBlock Text="Refresh" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </DockPanel>
+
+        <ProgressBar Grid.Row="1"
+                     IsIndeterminate="True"
+                     Height="4"
+                     Margin="0,0,0,8"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+        <Border Grid.Row="2"
+                Style="{StaticResource ErrorBannerStyle}"
+                Visibility="{Binding ErrorMessage, Converter={StaticResource NullToVisibilityConverter}}">
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{StaticResource ErrorBannerTextBrush}"
+                       TextWrapping="Wrap" />
+        </Border>
+
+        <Border Grid.Row="3"
+                Background="#E8F5E9"
+                BorderBrush="#A5D6A7"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="12,8"
+                Margin="0,0,0,8"
+                Visibility="{Binding StatusMessage, Converter={StaticResource NullToVisibilityConverter}}">
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#1B5E20" />
+        </Border>
+
+        <!-- Two Tabs: Unshipped and Late -->
+        <materialDesign:Card Grid.Row="4" Padding="14" UniformCornerRadius="10">
+            <TabControl Style="{StaticResource MaterialDesignFilledTabControl}">
+                <!-- Tab 1: Unshipped -->
+                <TabItem Header="Unshipped">
+                    <DataGrid ItemsSource="{Binding PendingOrders}"
+                              Style="{StaticResource ReadOnlyDataGridStyle}"
+                              Margin="0,12,0,0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Order #" Binding="{Binding Order.OrderId}" Width="84" />
+                            <DataGridTextColumn Header="Customer" Binding="{Binding Order.CustomerName}" Width="1.4*" />
+                            <DataGridTextColumn Header="Order Date" Binding="{Binding Order.OrderDate, StringFormat={x:Static app:AppFormats.IsoDateBinding}}" Width="105" />
+                            <DataGridTemplateColumn Header="Required Date" Width="190" SortMemberPath="Order.RequiredDate">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Order.RequiredDate, StringFormat={x:Static app:AppFormats.IsoDateBinding}, TargetNullValue=-}"
+                                                       VerticalAlignment="Center" />
+                                            <Border Style="{StaticResource CriticalBadgeStyle}"
+                                                    Margin="8,0,0,0"
+                                                    Visibility="{Binding IsOverdue, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <TextBlock Text="Overdue"
+                                                           FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#C62828" />
+                                            </Border>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Shipper" Binding="{Binding Order.ShipperName}" Width="1.1*" />
+                            <DataGridTextColumn Header="Net Total ($)" Binding="{Binding Order.NetTotal, StringFormat={}{0:N2}}" Width="110">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="Action" Width="138">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.ShipOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Height="30"
+                                                Padding="12,0"
+                                                FontSize="12">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="TruckDeliveryOutline" Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,5,0" />
+                                                <TextBlock Text="Ship Order" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+
+                <!-- Tab 2: Late -->
+                <TabItem Header="Late">
+                    <Grid Margin="0,12,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Delay Summary Cards by Shipper -->
+                        <ItemsControl Grid.Row="0" ItemsSource="{Binding ShipperDelays}" Margin="0,0,0,12">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <materialDesign:Card Padding="16,12" UniformCornerRadius="8" Margin="0,0,12,6" Background="#FFF5F5">
+                                        <StackPanel MinWidth="175">
+                                            <TextBlock Text="{Binding ShipperName}"
+                                                       FontSize="12.5"
+                                                       Foreground="{StaticResource MutedTextBrush}" />
+                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding LateCount}"
+                                                           FontSize="22"
+                                                           FontWeight="Bold"
+                                                           Foreground="#C62828" />
+                                                <TextBlock Text=" late"
+                                                           FontSize="12.5"
+                                                           Foreground="#B71C1C"
+                                                           VerticalAlignment="Bottom"
+                                                           Margin="4,0,0,3" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </materialDesign:Card>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Late Orders Table -->
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding LateOrders}"
+                                  Style="{StaticResource ReadOnlyDataGridStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Order #" Binding="{Binding OrderId}" Width="84" />
+                                <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="1.4*" />
+                                <DataGridTextColumn Header="Shipper" Binding="{Binding ShipperName}" Width="1.1*" />
+                                <DataGridTextColumn Header="Order Date" Binding="{Binding OrderDate, StringFormat={x:Static app:AppFormats.IsoDateBinding}}" Width="100" />
+                                <DataGridTextColumn Header="Required Date" Binding="{Binding RequiredDate, StringFormat={x:Static app:AppFormats.IsoDateBinding}}" Width="100" />
+                                <DataGridTextColumn Header="Shipped Date" Binding="{Binding ShippedDate, StringFormat={x:Static app:AppFormats.IsoDateBinding}}" Width="105" />
+                                <DataGridTemplateColumn Header="Delay" Width="96" SortMemberPath="DelayDays">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource CriticalBadgeStyle}" HorizontalAlignment="Left">
+                                                <TextBlock FontSize="11.5" FontWeight="SemiBold" Foreground="#C62828">
+                                                    <Run Text="{Binding DelayDays, Mode=OneWay}" />
+                                                    <Run Text=" days" />
+                                                </TextBlock>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Net Total ($)" Binding="{Binding NetTotal, StringFormat={}{0:N2}}" Width="110">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Right" />
+                                            <Setter Property="VerticalAlignment" Value="Center" />
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>

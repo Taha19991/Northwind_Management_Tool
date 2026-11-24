@@ -1,0 +1,167 @@
+<Window x:Class="Northwind.App.Views.Dialogs.NewTicketDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="New Support Ticket"
+        Width="540"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource AppBackgroundBrush}"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+    <Grid Margin="20">
+        <materialDesign:Card Padding="22" UniformCornerRadius="10">
+            <StackPanel>
+                <TextBlock Text="New Support Ticket" Style="{StaticResource SectionHeaderStyle}" Margin="0,0,0,12" />
+
+                <ProgressBar IsIndeterminate="True"
+                             Height="3"
+                             Margin="0,0,0,10"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                <Border Style="{StaticResource ErrorBannerStyle}"
+                        Margin="0,0,0,12"
+                        Visibility="{Binding ErrorMessage, Converter={StaticResource NullToVisibilityConverter}}">
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="{StaticResource ErrorBannerTextBrush}"
+                               TextWrapping="Wrap"
+                               FontSize="12.5" />
+                </Border>
+
+                <!-- Ticket Scope: Order vs Customer (3NF XOR) -->
+                <TextBlock Text="Link ticket to" FontSize="12" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                    <RadioButton Content="About an order"
+                                 IsChecked="{Binding IsOrderMode, Mode=TwoWay}"
+                                 GroupName="TicketScope"
+                                 Margin="0,0,22,0" />
+                    <RadioButton Content="General (customer)"
+                                 IsChecked="{Binding IsCustomerMode, Mode=TwoWay}"
+                                 GroupName="TicketScope" />
+                </StackPanel>
+
+                <!-- Order Mode -->
+                <StackPanel Visibility="{Binding IsOrderMode, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Margin="0,0,0,14">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding OrderIdText, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Order Number * (e.g. 10264)"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Return" Command="{Binding LookupOrderCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+
+                        <Button Grid.Column="2"
+                                Content="Look Up"
+                                Command="{Binding LookupOrderCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Height="46"
+                                VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Border Background="#E8F5E9"
+                            BorderBrush="#A5D6A7"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="10,6"
+                            Margin="0,8,0,0"
+                            Visibility="{Binding ResolvedOrderSummary, Converter={StaticResource NullToVisibilityConverter}}">
+                        <TextBlock Text="{Binding ResolvedOrderSummary}"
+                                   Foreground="#1B5E20"
+                                   FontSize="12.5"
+                                   FontWeight="Medium"
+                                   TextWrapping="Wrap" />
+                    </Border>
+
+                    <TextBlock Text="{Binding OrderLookupError}"
+                               Foreground="#C62828"
+                               FontSize="12"
+                               Margin="2,6,0,0"
+                               Visibility="{Binding OrderLookupError, Converter={StaticResource NullToVisibilityConverter}}" />
+                </StackPanel>
+
+                <!-- Customer Mode -->
+                <ComboBox ItemsSource="{Binding Customers}"
+                          SelectedItem="{Binding SelectedCustomer, Mode=TwoWay}"
+                          DisplayMemberPath="CompanyName"
+                          IsEditable="True"
+                          IsTextSearchEnabled="True"
+                          TextSearch.TextPath="CompanyName"
+                          StaysOpenOnEdit="True"
+                          materialDesign:HintAssist.Hint="Customer *"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          Margin="0,0,0,14"
+                          Visibility="{Binding IsCustomerMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                <!-- Category & Priority -->
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <ComboBox Grid.Column="0"
+                              ItemsSource="{Binding Categories}"
+                              SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                              DisplayMemberPath="DisplayName"
+                              materialDesign:HintAssist.Hint="Category *"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+
+                    <ComboBox Grid.Column="2"
+                              ItemsSource="{Binding Priorities}"
+                              SelectedItem="{Binding SelectedPriority, Mode=TwoWay}"
+                              DisplayMemberPath="DisplayName"
+                              materialDesign:HintAssist.Hint="Priority *"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+                </Grid>
+
+                <!-- Subject -->
+                <TextBox Text="{Binding Subject, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                         MaxLength="120"
+                         materialDesign:HintAssist.Hint="Subject * (max 120 characters)"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Margin="0,0,0,16" />
+
+                <!-- Description -->
+                <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         MinHeight="84"
+                         MaxHeight="130"
+                         VerticalScrollBarVisibility="Auto"
+                         VerticalContentAlignment="Top"
+                         materialDesign:HintAssist.Hint="Description (optional)"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Margin="0,0,0,16" />
+
+                <!-- Optional Assignee -->
+                <ComboBox ItemsSource="{Binding Assignees}"
+                          SelectedItem="{Binding SelectedAssignee, Mode=TwoWay}"
+                          DisplayMemberPath="DisplayName"
+                          materialDesign:HintAssist.Hint="Assign To (optional)"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          Margin="0,0,0,20" />
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancel"
+                            Command="{Binding CancelCommand}"
+                            IsCancel="True"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Margin="0,0,10,0" />
+                    <Button Content="Create Ticket"
+                            Command="{Binding SaveCommand}" />
+                </StackPanel>
+            </StackPanel>
+        </materialDesign:Card>
+    </Grid>
+</Window>

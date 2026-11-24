@@ -1,0 +1,366 @@
+<UserControl x:Class="Northwind.App.Views.OrderEditorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="New Order" Style="{StaticResource PageTitleStyle}" Margin="0" VerticalAlignment="Center" DockPanel.Dock="Left" />
+            <Button Content="Back to Orders"
+                    Command="{Binding CancelCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    Height="36" />
+        </DockPanel>
+
+        <ProgressBar Grid.Row="1"
+                     IsIndeterminate="True"
+                     Height="4"
+                     Margin="0,0,0,8"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+        <Border Grid.Row="2"
+                Style="{StaticResource ErrorBannerStyle}"
+                Visibility="{Binding ErrorMessage, Converter={StaticResource NullToVisibilityConverter}}">
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{StaticResource ErrorBannerTextBrush}"
+                       TextWrapping="Wrap" />
+        </Border>
+
+        <!-- Main 2-Column Layout -->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="1.35*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Header and Shipping Information -->
+            <materialDesign:Card Grid.Column="0" Padding="18" UniformCornerRadius="10">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,0">
+                        <TextBlock Text="Order Header" Style="{StaticResource SectionHeaderStyle}" />
+
+                        <ComboBox ItemsSource="{Binding Customers}"
+                                  SelectedItem="{Binding ActiveCustomer, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                  DisplayMemberPath="CompanyName"
+                                  TextSearch.TextPath="CompanyName"
+                                  IsEditable="True"
+                                  IsTextSearchEnabled="True"
+                                  StaysOpenOnEdit="True"
+                                  materialDesign:HintAssist.Hint="Customer *"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  Margin="0,0,0,16" />
+
+                        <ComboBox ItemsSource="{Binding Employees}"
+                                  SelectedValue="{Binding EmployeeId, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                  SelectedValuePath="EmployeeId"
+                                  DisplayMemberPath="FullName"
+                                  IsEnabled="{Binding CanChangeEmployee}"
+                                  materialDesign:HintAssist.Hint="Assigned Employee *"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  Margin="0,0,0,16" />
+
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <DatePicker Grid.Column="0"
+                                        SelectedDate="{Binding OrderDate, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                        materialDesign:HintAssist.Hint="Order Date *"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}" />
+
+                            <DatePicker Grid.Column="2"
+                                        SelectedDate="{Binding RequiredDate, Mode=TwoWay}"
+                                        materialDesign:HintAssist.Hint="Required Date"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}" />
+                        </Grid>
+
+                        <Grid Margin="0,0,0,18">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.3*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <ComboBox Grid.Column="0"
+                                      ItemsSource="{Binding Shippers}"
+                                      SelectedValue="{Binding ShipVia, Mode=TwoWay, ValidatesOnNotifyDataErrors=True}"
+                                      SelectedValuePath="ShipperId"
+                                      DisplayMemberPath="CompanyName"
+                                      materialDesign:HintAssist.Hint="Shipper *"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+
+                            <TextBox Grid.Column="2"
+                                     Text="{Binding FreightText, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     materialDesign:HintAssist.Hint="Freight ($)"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                        </Grid>
+
+                        <TextBlock Text="Shipping Address" Style="{StaticResource SectionHeaderStyle}" Margin="0,4,0,10" />
+
+                        <TextBox Text="{Binding ShipName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                 MaxLength="40"
+                                 materialDesign:HintAssist.Hint="Recipient Name"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Margin="0,0,0,14" />
+
+                        <TextBox Text="{Binding ShipAddress, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                 MaxLength="60"
+                                 materialDesign:HintAssist.Hint="Address"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Margin="0,0,0,14" />
+
+                        <Grid Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding ShipCity, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     MaxLength="15"
+                                     materialDesign:HintAssist.Hint="City"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+
+                            <TextBox Grid.Column="2"
+                                     Text="{Binding ShipRegion, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     MaxLength="15"
+                                     materialDesign:HintAssist.Hint="Region"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                        </Grid>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding ShipPostalCode, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     MaxLength="10"
+                                     materialDesign:HintAssist.Hint="Postal Code"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+
+                            <TextBox Grid.Column="2"
+                                     Text="{Binding ShipCountry, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                     MaxLength="15"
+                                     materialDesign:HintAssist.Hint="Country"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </materialDesign:Card>
+
+            <!-- Right: Line Items + Totals -->
+            <materialDesign:Card Grid.Column="2" Padding="18" UniformCornerRadius="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Order Lines" Style="{StaticResource SectionHeaderStyle}" />
+
+                    <!-- Add Line Bar -->
+                    <Border Grid.Row="1"
+                            Background="#F8FAFC"
+                            BorderBrush="#E2E8F0"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12"
+                            Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="10" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <ComboBox Grid.Row="0"
+                                      ItemsSource="{Binding AvailableProducts}"
+                                      SelectedItem="{Binding ActiveProduct, Mode=TwoWay}"
+                                      DisplayMemberPath="DisplayLabel"
+                                      materialDesign:HintAssist.Hint="Select product (active products only)"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1.1*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="0.9*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="0.95*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding ActiveProductPriceDisplay, Mode=OneWay}"
+                                         IsReadOnly="True"
+                                         materialDesign:HintAssist.Hint="Unit Price ($)"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+
+                                <TextBox Grid.Column="2"
+                                         Text="{Binding LineQuantityText, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="Quantity"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+
+                                <ComboBox Grid.Column="4"
+                                          ItemsSource="{Binding DiscountOptions}"
+                                          SelectedItem="{Binding ActiveDiscountOption, Mode=TwoWay}"
+                                          DisplayMemberPath="Label"
+                                          materialDesign:HintAssist.Hint="Discount"
+                                          Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+
+                                <Button Grid.Column="6"
+                                        Command="{Binding AddLineCommand}"
+                                        Height="42"
+                                        Padding="16,0"
+                                        VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Margin="0,0,4,0" />
+                                        <TextBlock Text="Add Line" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- Line Error -->
+                    <Border Grid.Row="2"
+                            Style="{StaticResource ErrorBannerStyle}"
+                            Margin="0,0,0,8"
+                            Visibility="{Binding LineErrorMessage, Converter={StaticResource NullToVisibilityConverter}}">
+                        <TextBlock Text="{Binding LineErrorMessage}"
+                                   Foreground="{StaticResource ErrorBannerTextBrush}"
+                                   FontSize="12.5" />
+                    </Border>
+
+                    <!-- Line Items Table -->
+                    <DataGrid Grid.Row="3"
+                              ItemsSource="{Binding OrderLines}"
+                              Style="{StaticResource ReadOnlyDataGridStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Product" Binding="{Binding ProductName}" Width="1.5*" />
+                            <DataGridTextColumn Header="Unit Price ($)" Binding="{Binding UnitPrice, StringFormat={}{0:N2}}" Width="92">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="54">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Discount" Binding="{Binding Discount, StringFormat={}{0:P0}}" Width="70">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Net ($)" Binding="{Binding NetAmount, StringFormat={}{0:N2}}" Width="90">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="" Width="48">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignIconButton}"
+                                                ToolTip="Remove line"
+                                                Width="30"
+                                                Height="30">
+                                            <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="#C62828" />
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Live Totals + Save -->
+                    <StackPanel Grid.Row="4" Margin="0,12,0,0">
+                        <Border Background="#F8FAFC"
+                                BorderBrush="#E2E8F0"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="14,10"
+                                Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="1.2*" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Gross Total ($)" FontSize="11.5" Foreground="{StaticResource MutedTextBrush}" />
+                                    <TextBlock Text="{Binding GrossTotal, StringFormat={}{0:N2}}" FontSize="14.5" FontWeight="SemiBold" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Discount ($)" FontSize="11.5" Foreground="{StaticResource MutedTextBrush}" />
+                                    <TextBlock FontSize="14.5" FontWeight="SemiBold" Foreground="#C62828">
+                                        <Run Text="-" />
+                                        <Run Text="{Binding DiscountTotal, StringFormat={}{0:N2}}" />
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                                    <TextBlock Text="Net Total ($)" FontSize="11.5" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Right" />
+                                    <TextBlock Text="{Binding NetTotal, StringFormat={}{0:N2}}" FontSize="18" FontWeight="Bold" Foreground="#1565C0" HorizontalAlignment="Right" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Cancel"
+                                    Command="{Binding CancelCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Margin="0,0,10,0"
+                                    Height="40" />
+                            <Button Command="{Binding SaveOrderCommand}"
+                                    Height="40"
+                                    Padding="20,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ContentSaveOutline" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                    <TextBlock Text="Save Order" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </materialDesign:Card>
+        </Grid>
+    </Grid>
+</UserControl>
